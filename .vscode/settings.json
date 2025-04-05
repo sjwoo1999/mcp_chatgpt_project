@@ -1,0 +1,11 @@
+{
+    "python.defaultInterpreterPath": "venv/bin/python",
+    "python.analysis.extraPaths": [
+      "./src",
+      "./venv/lib/python3.9/site-packages"
+    ],
+    "terminal.integrated.env.osx": {
+      "PYTHONPATH": "${workspaceFolder}/openai-agents-python/src"
+    }
+  }
+  
