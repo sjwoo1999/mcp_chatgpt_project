@@ -1,5 +1,3 @@
-# 📁 파일: ui/mcp_client.py
-
 import asyncio
 import os
 import sys
@@ -16,19 +14,19 @@ class MCPClient:
 
         self._ensure_openai_installed()
 
-        # ✅ PYTHONPATH 설정
-        pythonpath = os.path.abspath("../openai-agents-python/src/agents")
-        env = os.environ.copy()
-        env["PYTHONPATH"] = pythonpath
+        # ✅ 정확한 PYTHONPATH: agents 디렉터리를 루트로 인식시킴
+        base_agents_path = os.path.abspath("../openai-agents-python/src/agents")
 
-        print(f"🔧 MCP subprocess PYTHONPATH = {pythonpath}")
+        env = os.environ.copy()
+        env["PYTHONPATH"] = base_agents_path
+        print(f"🔧 MCP subprocess PYTHONPATH = {base_agents_path}")
 
         self.process = await asyncio.create_subprocess_exec(
             "python", self.script_path,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE,
-            env=env  # ✅ 환경 변수 주입
+            env=env
         )
 
         asyncio.create_task(self._read_stderr())
