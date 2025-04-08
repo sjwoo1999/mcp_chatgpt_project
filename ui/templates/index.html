@@ -1,29 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>MCP Agent UI</title>
-    <link rel="stylesheet" href="/static/style.css">
+  <meta charset="UTF-8">
+  <title>MCP Agent 인터페이스</title>
+  <link rel="stylesheet" href="/static/style.css" />
 </head>
 <body>
-    <div class="container">
-        <h1>💬 Ask the MCP Agent</h1>
-        <input type="text" id="user-input" placeholder="Try: Read the contents of hello.json" />
-        <button onclick="askAgent()">Ask</button>
-        <pre id="response"></pre>
+  <div class="container">
+    <h1>🧠 MCP Agent와 상호작용하기</h1>
+
+    <div class="button-group">
+      <button onclick="runAction('read_hello')">📄 hello.json 파일 읽기</button>
+      <button onclick="runAction('list_files')">📂 JSON 파일 목록 가져오기</button>
     </div>
 
-    <script>
-        async function askAgent() {
-            const input = document.getElementById("user-input").value;
-            const res = await fetch("/ask", {
-                method: "POST",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({input})
-            });
-            const data = await res.json();
-            document.getElementById("response").innerText = data.response;
-        }
-    </script>
+    <div id="loading" style="display: none;">⏳ 요청 중입니다... 잠시만 기다려 주세요.</div>
+    <pre id="response"></pre>
+  </div>
+
+  <script>
+    async function runAction(actionType) {
+      const loading = document.getElementById("loading");
+      const responseBox = document.getElementById("response");
+      responseBox.innerText = "";
+      loading.style.display = "block";
+
+      let input = "";
+
+      switch(actionType) {
+        case "read_hello":
+          input = "Read the contents of hello.json";
+          break;
+        case "list_files":
+          input = "List all .json files";
+          break;
+      }
+
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ input })
+      });
+
+      const data = await res.json();
+      loading.style.display = "none";
+      responseBox.innerText = data.response;
+    }
+  </script>
 </body>
 </html>
