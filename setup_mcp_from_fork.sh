@@ -1,9 +1,4 @@
-from pathlib import Path
-
-# Create a shell script to automate the MCP fork + integration setup
-script_path = Path("/mnt/data/setup_mcp_from_fork.sh")
-
-script_content = """#!/bin/bash
+#!/bin/bash
 
 set -e
 
@@ -33,9 +28,3 @@ git remote add upstream https://github.com/openai/openai-agents.git
 git fetch upstream
 
 echo "✅ Done! Your fork is now updated with your custom MCP changes and ready for integration."
-"""
-
-script_path.write_text(script_content)
-script_path.chmod(0o755)
-
-script_path
