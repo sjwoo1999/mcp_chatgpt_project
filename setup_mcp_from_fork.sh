@@ -3,19 +3,19 @@
 set -e
 
 echo "📦 Step 1: Backing up existing openai-agents-python..."
-cp -r mcp_chatgpt_project/openai-agents-python mcp_chatgpt_project/openai-agents-python-backup
+cp -r openai-agents-python mcp_chatgpt_project/openai-agents-python-backup
 
 echo "🧹 Step 2: Removing old directory..."
-rm -rf mcp_chatgpt_project/openai-agents-python
+rm -rf openai-agents-python
 
 echo "🌐 Step 3: Cloning your forked repo..."
 git clone https://github.com/sjwoo1999/openai-agents-python.git mcp_chatgpt_project/openai-agents-python
 
 echo "🔧 Step 4: Applying custom changes from backup..."
-cp -r mcp_chatgpt_project/openai-agents-python-backup/src/agents/mcp/* mcp_chatgpt_project/openai-agents-python/src/agents/mcp/
+cp -r openai-agents-python-backup/src/agents/mcp/* mcp_chatgpt_project/openai-agents-python/src/agents/mcp/
 
 echo "✅ Step 5: Checking git status inside forked directory..."
-cd mcp_chatgpt_project/openai-agents-python
+cd openai-agents-python
 git status
 
 echo "💾 Step 6: Committing your custom changes..."
