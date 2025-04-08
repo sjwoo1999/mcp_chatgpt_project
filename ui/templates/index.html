@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MCP Agent UI</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>💬 Ask the MCP Agent</h1>
+        <input type="text" id="user-input" placeholder="Try: Read the contents of hello.json" />
+        <button onclick="askAgent()">Ask</button>
+        <pre id="response"></pre>
+    </div>
+
+    <script>
+        async function askAgent() {
+            const input = document.getElementById("user-input").value;
+            const res = await fetch("/ask", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({input})
+            });
+            const data = await res.json();
+            document.getElementById("response").innerText = data.response;
+        }
+    </script>
+</body>
+</html>
