@@ -1,5 +1,3 @@
-# 📁 파일: ui/main.py
-
 from flask import Flask, render_template, request, jsonify
 import os
 import asyncio
@@ -13,17 +11,20 @@ loop = asyncio.get_event_loop()
 # 📌 MCPClient 전역 객체 초기화
 mcp_client = None
 
+# 📌 경로 기준: main.py 위치 기준으로 절대경로 계산
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MCP_PATH = os.path.abspath(os.path.join(BASE_DIR, "../openai-agents-python/src/agents/mcp/mcp_filesystem_server.py"))
+
 @app.before_first_request
 def init_server():
     global mcp_client
     print("\n✅ MCP 서버 초기화 준비됨")
-    path = os.path.abspath("../openai-agents-python/src/agents/mcp_filesystem_server.py")
-    print(f"🔍 MCP 경로: {path}")
-    if not os.path.exists(path):
+    print(f"🔍 MCP 경로: {MCP_PATH}")
+    if not os.path.exists(MCP_PATH):
         print("❌ MCP 서버 파일 없음!")
     else:
         print("✅ MCP 서버 파일 존재!")
-        mcp_client = MCPClient(path)
+        mcp_client = MCPClient(MCP_PATH)
         loop.run_until_complete(mcp_client.start())  # 🧠 비동기 서버 실행 유지
 
 @app.route("/")
@@ -56,10 +57,7 @@ def ask():
         return jsonify({"response": result, "error": False})
     except Exception as e:
         return jsonify({"response": f"❌ 오류: {str(e)}", "error": True})
-    
-# 📁 파일: ui/main.py (`init_server()`에 추가)
 
 @app.route("/server-status")
 def server_status():
-    path = os.path.abspath("../openai-agents-python/src/agents/mcp_filesystem_server.py")
-    return jsonify({"exists": os.path.exists(path)})
+    return jsonify({"exists": os.path.exists(MCP_PATH)})
