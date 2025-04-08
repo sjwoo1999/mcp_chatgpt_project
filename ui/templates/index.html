@@ -1,116 +1,54 @@
+# 📁 파일: ui/templates/index.html
+
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <title>MCP 에이전트 인터페이스</title>
-    <link rel="stylesheet" href="/static/style.css">
-    <style>
-        button {
-            margin: 5px;
-            padding: 10px 20px;
-            font-size: 1rem;
-            border-radius: 8px;
-            border: none;
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        button:hover {
-            background-color: #45a049;
-        }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
-        }
-        .error {
-            color: red;
-            font-weight: bold;
-        }
-        pre {
-            white-space: pre-wrap;
-            background: #f0f0f0;
-            padding: 15px;
-            border-radius: 8px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>MCP 에이전트 인터페이스</title>
+  <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🛠️ MCP 에이전트 도구 실행</h1>
-        <p class="desc">아래 버튼을 눌러 실행할 도구를 선택하세요.</p>
+  <div class="container">
+    <h1>🛠️ MCP 에이전트 도구 실행</h1>
+    <p>아래 버튼을 눌러 실행할 도구를 선택하세요.</p>
 
-        <div id="tool-buttons" class="buttons">
-            <p>🔄 도구 목록을 불러오는 중...</p>
-        </div>
-
-        <div id="loading" class="loading" style="display:none;">⏳ 도구 실행 중입니다...</div>
-
-        <div id="response-section" style="margin-top: 20px;">
-            <h3>📤 결과 응답</h3>
-            <pre id="response"></pre>
-        </div>
+    <div class="button-group">
+      <button onclick="runTool('list')">list</button>
+      <button onclick="runTool('read')">read</button>
+      <button onclick="runTool('write')">write</button>
     </div>
 
-    <script>
-        async function fetchTools() {
-            const container = document.getElementById("tool-buttons");
-            try {
-                const res = await fetch("/tools");
-                const data = await res.json();
+    <div class="response">
+      <h3>📤 결과 응답</h3>
+      <pre id="result" class="output-box"></pre>
+    </div>
+  </div>
 
-                container.innerHTML = "";
+  <script>
+    async function runTool(tool) {
+      const res = await fetch("/ask", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({tool})
+      });
+      const data = await res.json();
 
-                if (data.tools && data.tools.length > 0) {
-                    data.tools.forEach(tool => {
-                        const btn = document.createElement("button");
-                        btn.innerText = tool;
-                        btn.onclick = () => askTool(tool, btn);
-                        container.appendChild(btn);
-                    });
-                } else {
-                    container.innerHTML = "<p class='error'>⚠️ 사용할 수 있는 도구가 없습니다.</p>";
-                }
-            } catch (error) {
-                console.error("도구 로딩 실패:", error);
-                container.innerHTML = "<p class='error'>🚫 도구 목록을 불러오는 데 실패했습니다. MCP 서버가 실행 중인지 확인하세요.</p>";
-            }
+      const box = document.getElementById("result");
+      if (data.error) {
+        box.textContent = `❌ 오류: ${data.response}`;
+        box.style.color = "red";
+      } else {
+        box.textContent = `✅ 결과:\n${data.response}`;
+        box.style.color = "black";
+      }
+    }
+    window.addEventListener("DOMContentLoaded", async () => {
+        const res = await fetch("/server-status");
+        const data = await res.json();
+        if (!data.exists) {
+            alert("❌ MCP 서버 파일이 존재하지 않습니다. 경로를 확인하세요.");
         }
-
-        async function askTool(tool, button) {
-            const loading = document.getElementById("loading");
-            const response = document.getElementById("response");
-            response.innerText = "";
-            loading.style.display = "block";
-
-            // 버튼 클릭 중 다른 버튼 비활성화
-            const allButtons = document.querySelectorAll("button");
-            allButtons.forEach(btn => btn.disabled = true);
-
-            try {
-                const res = await fetch("/ask", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ tool })
-                });
-
-                const data = await res.json();
-                if (data.response) {
-                    response.innerText = data.response;
-                } else {
-                    response.innerText = `❌ 오류: ${data.error || "알 수 없는 오류"}`;
-                }
-            } catch (error) {
-                console.error("도구 실행 오류:", error);
-                response.innerText = "❌ 도구 실행 중 오류가 발생했습니다.";
-            } finally {
-                loading.style.display = "none";
-                allButtons.forEach(btn => btn.disabled = false);
-            }
-        }
-
-        // 최초 실행
-        fetchTools();
-    </script>
+    });
+  </script>
 </body>
 </html>

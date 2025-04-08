@@ -1,6 +1,7 @@
+# 📁 파일: ui/mcp_client.py
+
 import asyncio
 import os
-import json
 
 class MCPClient:
     def __init__(self, script_path: str):
@@ -9,7 +10,7 @@ class MCPClient:
 
     async def start(self):
         if not os.path.exists(self.script_path):
-            raise FileNotFoundError(f"MCP script not found: {self.script_path}")
+            raise FileNotFoundError(f"❌ MCP 서버 스크립트가 존재하지 않음: {self.script_path}")
 
         self.process = await asyncio.create_subprocess_exec(
             "python", self.script_path,
@@ -18,27 +19,12 @@ class MCPClient:
             stderr=asyncio.subprocess.PIPE
         )
 
-    async def send_command(self, tool: str, args: dict = {}) -> dict:
-        if not self.process:
-            raise RuntimeError("MCP is not running.")
+    async def send_command(self, command: str):
+        if self.process is None:
+            raise RuntimeError("MCP 서버 프로세스가 시작되지 않았습니다.")
 
-        command_obj = {"tool": tool, "args": args}
-        command_str = json.dumps(command_obj)
-
-        self.process.stdin.write((command_str + "\n").encode())
+        self.process.stdin.write((command + "\n").encode())
         await self.process.stdin.drain()
 
-        stdout_line = await self.process.stdout.readline()
-        stderr_line = await self.process.stderr.readline()
-
-        result = {
-            "stdout": stdout_line.decode().strip(),
-            "stderr": stderr_line.decode().strip()
-        }
-
-        try:
-            result["parsed"] = json.loads(result["stdout"])
-        except Exception:
-            result["parsed"] = None
-
-        return result
+        output = await self.process.stdout.readline()
+        return output.decode().strip()
