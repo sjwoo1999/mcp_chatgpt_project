@@ -17,7 +17,7 @@ class MCPClient:
         self._ensure_openai_installed()
 
         # ✅ PYTHONPATH 설정
-        pythonpath = os.path.abspath("../openai-agents-python/src")
+        pythonpath = os.path.abspath("../openai-agents-python/src/agents")
         env = os.environ.copy()
         env["PYTHONPATH"] = pythonpath
 
