@@ -20,11 +20,12 @@ git status
 
 echo "💾 Step 6: Committing your custom changes..."
 git add .
-git commit -m "✨ Custom: Applied local MCP modifications"
+git commit -m '✨ Custom: Applied local MCP modifications'
 git push origin main
 
 echo "🔁 Step 7: Adding upstream for future updates..."
-git remote add upstream https://github.com/openai/openai-agents.git
+git remote remove upstream 2>/dev/null || true
+git remote add upstream https://github.com/openai/openai-agents-python.git
 git fetch upstream
 
 echo "✅ Done! Your fork is now updated with your custom MCP changes and ready for integration."
