@@ -23,7 +23,7 @@ h1 {
     margin-bottom: 1.5rem;
 }
 
-.buttons {
+.button-group, .buttons {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
@@ -53,8 +53,9 @@ pre {
     font-size: 0.95rem;
 }
 
-.loading {
-    font-weight: bold;
-    margin-bottom: 1rem;
-    color: #1f87ff;
+.input-group input {
+    margin: 0.5rem 0.3rem;
+    padding: 0.6rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
 }

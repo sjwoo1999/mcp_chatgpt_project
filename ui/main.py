@@ -1,95 +1,40 @@
-# 🔧 수정 완료된 main.py (Flask + MCP 비동기 통합)
+# 📁 ui/main.py
 
-import os
-import sys
-import asyncio
-import nest_asyncio
 from flask import Flask, render_template, request, jsonify
-
-# 🧠 1. PYTHONPATH 설정을 위해 루트 디렉토리 삽입
-CURRENT_FILE = os.path.abspath(__file__)
-ROOT_DIR = os.path.abspath(os.path.join(CURRENT_FILE, "../.."))
-if ROOT_DIR not in sys.path:
-    print("📂 sys.path에 프로젝트 루트 추가:", ROOT_DIR)
-    sys.path.insert(0, ROOT_DIR)
-
-# 🔄 2. 루트 설정 후 내부 모듈 import
+import asyncio
+import os
 from ui.mcp_client import MCPClient
 
-# 🌀 3. 이벤트 루프 중첩 허용 (Flask + asyncio 공존)
-nest_asyncio.apply()
 app = Flask(__name__)
-mcp_client: MCPClient | None = None
 
-# 🛠 4. MCP 파일 경로 지정
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MCP_PATH = os.path.abspath(
-    os.path.join(BASE_DIR, "../openai-agents-python/src/agents/mcp/mcp_filesystem_server.py")
-)
+# ✅ MCP 서버 실행에 필요한 설정 값
+MCP_SERVER_COMMAND = "python"
+MCP_SERVER_CWD = os.path.abspath(os.path.join(os.path.dirname(__file__), "../openai-agents-python/src/agents/mcp"))
+MCP_SERVER_ENV = {"PYTHONPATH": os.path.abspath(os.path.join(os.path.dirname(__file__), "../openai-agents-python/src"))}
 
-# ✅ 5. MCP 서버 비동기 초기화 함수
-async def start_mcp():
-    global mcp_client
-    print("✅ MCP 서버 초기화 준비됨")
-    print(f"🔍 MCP 경로: {MCP_PATH}")
-
-    if not os.path.exists(MCP_PATH):
-        print("❌ MCP 서버 파일 없음")
-        return
-
-    try:
-        mcp_client = MCPClient(MCP_PATH)
-        await mcp_client.start()
-        print("🚀 MCP subprocess 시작 완료")
-    except Exception as e:
-        print(f"❌ MCP 시작 중 예외 발생: {e}")
-
-# 🔁 6. Flask + Asyncio 병합 실행기
-def start_flask_with_async():
-    import threading
-
-    def run_loop():
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(start_mcp())
-        loop.run_forever()
-
-    threading.Thread(target=run_loop, daemon=True).start()
-    app.run(debug=True)
-
-# 🌐 7. Flask 라우트 정의
 @app.route("/")
-def home():
+def index():
     return render_template("index.html")
 
 @app.route("/ask", methods=["POST"])
-async def ask():
-    global mcp_client
-    if not mcp_client or not mcp_client.process:
-        return jsonify({"response": "❌ MCP 서버 프로세스가 초기화되지 않았습니다.", "error": True})
+def ask():
+    data = request.json
+    tool_name = data.get("tool") or "list"  # 기본값
+    arguments = data.get("args") or {}
 
-    data = request.get_json()
-    tool = data.get("tool")
+    async def call():
+        client = MCPClient(command=MCP_SERVER_COMMAND, cwd=MCP_SERVER_CWD, env=MCP_SERVER_ENV)
+        await client.connect()
+        result = await client.call(tool_name, arguments)
+        await client.close()
+        return result
 
-    if tool == "list":
-        command = "list"
-    elif tool == "read":
-        command = 'read {"path": "hello.json"}'
-    elif tool == "write":
-        command = 'write {"path": "hello.json", "content": "Hi"}'
-    else:
-        return jsonify({"response": "❌ Unknown tool", "error": True})
+    result = asyncio.run(call())
+    return jsonify(result)
 
-    try:
-        result = await mcp_client.send_command(command)
-        return jsonify({"response": result, "error": False})
-    except Exception as e:
-        return jsonify({"response": f"❌ MCP 실행 중 오류: {str(e)}", "error": True})
-
-@app.route("/server-status")
+# ✨ MCP 서버 파일 여부 확인을 위한 endpoint
+@app.route("/server-status", methods=["GET"])
 def server_status():
-    return jsonify({"exists": os.path.exists(MCP_PATH)})
-
-# ▶️ 8. 앱 실행 시작
-if __name__ == "__main__":
-    start_flask_with_async()
+    mcp_server_path = os.path.join(MCP_SERVER_CWD, "mcp_filesystem_server.py")
+    exists = os.path.exists(mcp_server_path)
+    return jsonify({"exists": exists})
